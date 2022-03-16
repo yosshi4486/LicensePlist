@@ -74,6 +74,28 @@ class PlistInfoTests: XCTestCase {
         XCTAssertEqual(lib1, GitHub(name: "facebook-ios-sdk", nameSpecified: nil, owner: "facebook", version: "sdk-version-4.21.0"))
     }
 
+    func testLoadSwiftPackageLibraries() throws {
+        var target = PlistInfo(options: options)
+        let path = TestUtil.testResourceDir.appendingPathComponent("PackageV2.resolved").absoluteString
+        let file = try String(contentsOfFile: path, encoding: .utf8)
+        target.loadSwiftPackageLibraries(packageFiles: [file])
+        let libraries = try XCTUnwrap(target.githubLibraries)
+        XCTAssertEqual(libraries.count, 4)
+
+        let lib1 = libraries[0]
+        XCTAssertEqual(lib1, GitHub(name: "facebook-ios-sdk", nameSpecified: nil, owner: "facebook", version: "sdk-version-4.21.0"))
+
+        let lib2 = libraries[1]
+        XCTAssertEqual(lib2,GitHub(name: "DZNEmptyDataSet", nameSpecified: "dznemptydataset", owner: "dzenbot", version: nil))
+
+        let lib3 = libraries[2]
+        XCTAssertEqual(lib3,GitHub(name: "MBProgressHUD", nameSpecified: "mbprogresshud", owner: "jdg", version: "1.2.0"))
+
+        let lib4 = libraries[3]
+        XCTAssertEqual(lib4,GitHub(name: "Version", nameSpecified: "version", owner: "mxcl", version: "2.0.1"))
+
+    }
+
     func testCompareWithLatestSummary() {
         var target = PlistInfo(options: options)
         target.cocoaPodsLicenses = []
