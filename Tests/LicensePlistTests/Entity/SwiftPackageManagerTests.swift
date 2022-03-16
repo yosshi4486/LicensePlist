@@ -77,6 +77,55 @@ class SwiftPackageManagerTests: XCTestCase {
         XCTAssertNil(package.state.version)
     }
 
+    func testDecodingResolvedPackageV1() throws {
+        let jsonString = """
+            {
+              "object": {
+                "pins": [
+                  {
+                    "package": "APIKit",
+                    "repositoryURL": "https://github.com/ishkawa/APIKit.git",
+                    "state": {
+                      "branch": null,
+                      "revision": "86d51ecee0bc0ebdb53fb69b11a24169a69097ba",
+                      "version": "4.1.0"
+                    }
+                  },
+                  {
+                    "package": "Commander",
+                    "repositoryURL": "https://github.com/kylef/Commander.git",
+                    "state": {
+                      "branch": null,
+                      "revision": "e5b50ad7b2e91eeb828393e89b03577b16be7db9",
+                      "version": "0.8.0"
+                    }
+                  }
+                ]
+              },
+              "version": 1
+            }
+        """
+
+        let data = try XCTUnwrap(jsonString.data(using: .utf8))
+        let resolvedPackage = try JSONDecoder().decode(ResolvedPackagesV1.self, from: data)
+
+        XCTAssertEqual(resolvedPackage.version, 1)
+        XCTAssertEqual(resolvedPackage.object.pins.count, 2)
+
+        XCTAssertEqual(resolvedPackage.object.pins[0].package, "APIKit")
+        XCTAssertEqual(resolvedPackage.object.pins[0].repositoryURL, "https://github.com/ishkawa/APIKit.git")
+        XCTAssertEqual(resolvedPackage.object.pins[0].state.revision, "86d51ecee0bc0ebdb53fb69b11a24169a69097ba")
+        XCTAssertNil(resolvedPackage.object.pins[0].state.branch)
+        XCTAssertEqual(resolvedPackage.object.pins[0].state.version, "4.1.0")
+
+        XCTAssertEqual(resolvedPackage.object.pins[1].package, "Commander")
+        XCTAssertEqual(resolvedPackage.object.pins[1].repositoryURL, "https://github.com/kylef/Commander.git")
+        XCTAssertEqual(resolvedPackage.object.pins[1].state.revision, "e5b50ad7b2e91eeb828393e89b03577b16be7db9")
+        XCTAssertNil(resolvedPackage.object.pins[1].state.branch)
+        XCTAssertEqual(resolvedPackage.object.pins[1].state.version, "0.8.0")
+
+    }
+
     func testDecodingWithVersionV2() throws {
         let jsonString = """
             {
@@ -121,6 +170,50 @@ class SwiftPackageManagerTests: XCTestCase {
         XCTAssertEqual(package.state.revision, "86d51ecee0bc0ebdb53fb69b11a24169a69097ba")
         XCTAssertEqual(package.state.branch, "master")
         XCTAssertNil(package.state.version)
+    }
+
+    func testDecodingResolvedPackageV2() throws {
+        let jsonString = """
+            {
+              "pins" : [
+                {
+                  "identity" : "dznemptydataset",
+                  "kind" : "remoteSourceControl",
+                  "location" : "https://github.com/dzenbot/DZNEmptyDataSet",
+                  "state" : {
+                    "branch" : "master",
+                    "revision" : "9bffa69a83a9fa58a14b3cf43cb6dd8a63774179"
+                  }
+                },
+                {
+                  "identity" : "version",
+                  "kind" : "remoteSourceControl",
+                  "location" : "https://github.com/mxcl/Version",
+                  "state" : {
+                    "revision" : "1fe824b80d89201652e7eca7c9252269a1d85e25",
+                    "version" : "2.0.1"
+                  }
+                }
+              ],
+              "version" : 2
+            }
+        """
+
+        let data = try XCTUnwrap(jsonString.data(using: .utf8))
+        let resolvedPackage = try JSONDecoder().decode(ResolvedPackagesV2.self, from: data)
+
+        XCTAssertEqual(resolvedPackage.version, 2)
+        XCTAssertEqual(resolvedPackage.pins.count, 2)
+
+        XCTAssertEqual(resolvedPackage.pins[0].identity, "dznemptydataset")
+        XCTAssertEqual(resolvedPackage.pins[0].location, "https://github.com/dzenbot/DZNEmptyDataSet")
+        XCTAssertEqual(resolvedPackage.pins[0].state.branch, "master")
+        XCTAssertEqual(resolvedPackage.pins[0].state.revision, "9bffa69a83a9fa58a14b3cf43cb6dd8a63774179")
+
+        XCTAssertEqual(resolvedPackage.pins[1].identity, "version")
+        XCTAssertEqual(resolvedPackage.pins[1].location, "https://github.com/mxcl/Version")
+        XCTAssertEqual(resolvedPackage.pins[1].state.version, "2.0.1")
+        XCTAssertEqual(resolvedPackage.pins[1].state.revision, "1fe824b80d89201652e7eca7c9252269a1d85e25")
     }
 
     func testConvertToGithub() {
