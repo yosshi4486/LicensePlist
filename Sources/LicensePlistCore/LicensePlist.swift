@@ -12,22 +12,7 @@ public final class LicensePlist {
         info.loadCocoaPodsLicense(acknowledgements: readPodsAcknowledgements(path: options.podsPath))
         info.loadGitHubLibraries(file: readCartfile(path: options.cartfilePath))
         info.loadGitHubLibraries(file: readMintfile(path: options.mintfilePath))
-
-        do {
-            let swiftPackageFileReadResults = try options.packagePaths.compactMap { packagePath in
-                try SwiftPackageFileReader(path: packagePath).read()
-            }
-
-            let xcodeFileReadResult = try xcodeFileReadResult(xcworkspacePath: options.xcworkspacePath, xcodeprojPath: options.xcodeprojPath)
-
-            let packageFiles = swiftPackageFileReadResults.isEmpty
-                ? [xcodeFileReadResult ?? ""]
-                : swiftPackageFileReadResults
-
-            info.loadSwiftPackageLibraries(packageFiles: packageFiles)
-        } catch {
-            fatalError(error.localizedDescription)
-        }
+        info.loadSwiftPackageLibraries(packageFiles: readSwiftPackageFiles(options: options))
         info.loadManualLibraries()
         info.compareWithLatestSummary()
         info.downloadGitHubLicenses()
@@ -41,21 +26,6 @@ public final class LicensePlist {
         }
     }
 
-    /// Gets the result of attempting to read the `Package.resolved` from ether a Xcode Workspace or Xcode project.
-    /// - note: If an Xcode workspace is found it is preferred over a Xcode project.
-    private func xcodeFileReadResult(xcworkspacePath: URL, xcodeprojPath: URL) throws -> String? {
-
-        var result: String?
-        if xcworkspacePath.path.isEmpty == false {
-            result = try XcodeWorkspaceFileReader(path: xcworkspacePath).read()
-        }
-
-        if result == nil && xcodeprojPath.path.isEmpty == false {
-            result = try XcodeProjectFileReader(path: xcodeprojPath).read()
-        }
-
-        return result
-    }
 }
 
 private func readCartfile(path: URL) -> GitHubLibraryConfigFile {
@@ -98,4 +68,40 @@ private func readPodsAcknowledgements(path: URL) -> [String] {
         }.flatMap { $0 }
     urls.forEach { Log.info("Pod acknowledgements found: \($0.lastPathComponent)") }
     return urls.map { $0.lp.read() }.compactMap { $0 }
+}
+
+private func readSwiftPackageFiles(options: Options) -> [String] {
+
+    do {
+        let swiftPackageFileReadResults = try options.packagePaths.compactMap { packagePath in
+            try SwiftPackageFileReader(path: packagePath).read()
+        }
+
+        let xcodeFileReadResult = try xcodeFileReadResult(xcworkspacePath: options.xcworkspacePath, xcodeprojPath: options.xcodeprojPath)
+
+        let packageFiles = swiftPackageFileReadResults.isEmpty
+            ? [xcodeFileReadResult ?? ""]
+            : swiftPackageFileReadResults
+
+        return packageFiles
+    } catch {
+        fatalError(error.localizedDescription)
+    }
+
+}
+
+/// Gets the result of attempting to read the `Package.resolved` from ether a Xcode Workspace or Xcode project.
+/// - note: If an Xcode workspace is found it is preferred over a Xcode project.
+private func xcodeFileReadResult(xcworkspacePath: URL, xcodeprojPath: URL) throws -> String? {
+
+    var result: String?
+    if xcworkspacePath.path.isEmpty == false {
+        result = try XcodeWorkspaceFileReader(path: xcworkspacePath).read()
+    }
+
+    if result == nil && xcodeprojPath.path.isEmpty == false {
+        result = try XcodeProjectFileReader(path: xcodeprojPath).read()
+    }
+
+    return result
 }
