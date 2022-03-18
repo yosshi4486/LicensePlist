@@ -1,10 +1,3 @@
-//
-//  SwiftPackageFileReaderTests.swift
-//  LicensePlistTests
-//
-//  Created by yosshi4486 on 2021/04/06.
-//
-
 import XCTest
 @testable import LicensePlistCore
 

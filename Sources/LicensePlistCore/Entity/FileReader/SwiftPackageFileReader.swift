@@ -1,10 +1,3 @@
-//
-//  SwiftPackageFileReader.swift
-//  LicensePlistCore
-//
-//  Created by yosshi4486 on 2021/04/06.
-//
-
 import Foundation
 
 /// An object that reads a Package.swift or Package.resolved file.

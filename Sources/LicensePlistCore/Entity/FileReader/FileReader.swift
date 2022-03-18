@@ -1,10 +1,3 @@
-//
-//  FileReader.swift
-//  LicensePlistCore
-//
-//  Created by yosshi4486 on 2021/04/06.
-//
-
 import Foundation
 
 /// An object that reads any file from the given path.
